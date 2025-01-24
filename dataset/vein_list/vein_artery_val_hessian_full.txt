@@ -1,0 +1,5 @@
+25_vein_artery/imagesTr_hessian/WFL_full_0000.nii.gz	25_vein_artery/labelsTr_ori/WFL_full.nii.gz
+25_vein_artery/imagesTr_hessian/DGQ_full_0000.nii.gz	25_vein_artery/labelsTr_ori/DGQ_full.nii.gz
+25_vein_artery/imagesTr_hessian/HJ_full_0000.nii.gz	    25_vein_artery/labelsTr_ori/HJ_full.nii.gz
+25_vein_artery/imagesTr_hessian/YXM_full_0000.nii.gz	25_vein_artery/labelsTr_ori/YXM_full.nii.gz
+25_vein_artery/imagesTr_hessian/ZBY_full_0000.nii.gz	25_vein_artery/labelsTr_ori/ZBY_full.nii.gz

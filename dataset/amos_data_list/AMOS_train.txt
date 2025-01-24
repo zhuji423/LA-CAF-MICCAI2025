@@ -1,0 +1,10 @@
+09_AMOS/imagesTr/amos_0001.nii.gz	09_AMOS/labelsTr/amos_0001.nii.gz
+09_AMOS/imagesTr/amos_0005.nii.gz	09_AMOS/labelsTr/amos_0005.nii.gz
+09_AMOS/imagesTr/amos_0006.nii.gz	09_AMOS/labelsTr/amos_0006.nii.gz
+09_AMOS/imagesTr/amos_0009.nii.gz	09_AMOS/labelsTr/amos_0009.nii.gz
+09_AMOS/imagesTr/amos_0010.nii.gz	09_AMOS/labelsTr/amos_0010.nii.gz
+09_AMOS/imagesTr/amos_0011.nii.gz	09_AMOS/labelsTr/amos_0011.nii.gz
+09_AMOS/imagesTr/amos_0014.nii.gz	09_AMOS/labelsTr/amos_0014.nii.gz
+09_AMOS/imagesTr/amos_0016.nii.gz	09_AMOS/labelsTr/amos_0016.nii.gz
+09_AMOS/imagesTr/amos_0017.nii.gz	09_AMOS/labelsTr/amos_0017.nii.gz
+09_AMOS/imagesTr/amos_0021.nii.gz	09_AMOS/labelsTr/amos_0021.nii.gz
