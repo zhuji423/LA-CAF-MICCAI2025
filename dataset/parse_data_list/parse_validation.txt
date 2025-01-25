@@ -1,0 +1,10 @@
+26_parse/imagesTr/PA000195_0000.nii.gz	26_parse/labelsTr/PA000195.nii.gz
+26_parse/imagesTr/PA000138_0000.nii.gz	26_parse/labelsTr/PA000138.nii.gz
+26_parse/imagesTr/PA000026_0000.nii.gz	26_parse/labelsTr/PA000026.nii.gz
+26_parse/imagesTr/PA000286_0000.nii.gz	26_parse/labelsTr/PA000286.nii.gz
+26_parse/imagesTr/PA000125_0000.nii.gz	26_parse/labelsTr/PA000125.nii.gz
+26_parse/imagesTr/PA000042_0000.nii.gz	26_parse/labelsTr/PA000042.nii.gz
+26_parse/imagesTr/PA000201_0000.nii.gz	26_parse/labelsTr/PA000201.nii.gz
+26_parse/imagesTr/PA000106_0000.nii.gz	26_parse/labelsTr/PA000106.nii.gz
+26_parse/imagesTr/PA000060_0000.nii.gz	26_parse/labelsTr/PA000060.nii.gz
+26_parse/imagesTr/PA000317_0000.nii.gz	26_parse/labelsTr/PA000317.nii.gz

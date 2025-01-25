@@ -40,14 +40,14 @@ from monai.config.type_definitions import NdarrayOrTensor
 from utils.utils import get_key
 
 ORGAN_DATASET_DIR = '/pub/data/yangdeq/CLIP/data/vein/'
-ORGAN_LIST = '/home/yangdq/project/module/CLIP-Driven-Universal-Model/dataset/vein_semi_full_list/vein_semi_bold_full_718.txt'
+ORGAN_LIST = '/home/yangdq/project/module/CLIP_Driven_UM_github/dataset/parse_data_list/parse_100.txt'
 # ORGAN_LIST = '/home/yangdq/project/module/CLIP-Driven-Universal-Model/dataset/vein_semi_full_list/WRONGLIST'
 NUM_WORKER = 8
 # NUM_CLASS = 32
-NUM_CLASS = 36
+NUM_CLASS = 37
 ## full list
 # TRANSFER_LIST = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10_03', '10_06', '10_07', '10_08', '10_09', '10_10', '12', '13', '14']
-TRANSFER_LIST = ['25']
+TRANSFER_LIST = ['26']
 TEMPLATE={
     '01': [1,2,3,4,5,6,7,8,9,10,11,12,13,14],
     '02': [1,0,3,4,5,6,7,0,0,0,11,0,0,14],
@@ -67,7 +67,8 @@ TEMPLATE={
     '10_09': [1],
     '10_10': [31],
     # '25' : [33,34]
-    '25'   : [33,34,35,36]
+    '25'   : [33,34,35,36],
+    '26'   : [37]  ## parse  artery
     
 }
 

@@ -103,7 +103,7 @@ def process(args,snapshot_path):
         # organ_embedding = linear(transposed.float())  # shape is now [512, 2]
         # store_dict['organ_embedding'] = organ_embedding.transpose(0, 1)  # shape is now [2, 512]
 
-        zeros_tensor = torch.zeros([4, 512]).to(args.device)
+        zeros_tensor = torch.zeros([1, 512]).to(args.device)
         store_dict['organ_embedding'] = zeros_tensor
         model.load_state_dict(store_dict)
         print('Use pretrained weights. load', num_count, 'params into', len(store_dict.keys()))
@@ -224,7 +224,7 @@ def main():
     parser.add_argument("--device")
     parser.add_argument("--epoch", default=1)
     ## logging
-    parser.add_argument('--log_name', default='model2025/0124/vein_semi_full_717_4classes_attention_512_concat_4txt_img_adapter', help='The path resume from checkpoint')
+    parser.add_argument('--log_name', default='model2025/0124/parse_adapter', help='The path resume from checkpoint')
     ## model load
     parser.add_argument('--backbone', default='unet', help='backbone [swinunetr or unet or dints or unetpp]')
     parser.add_argument('--resume', default=None,\
@@ -233,7 +233,7 @@ def main():
                         help='The path of pretrain model. ')
     parser.add_argument('--trans_encoding', default='word_embedding', 
                         help='the type of encoding: rand_embedding or word_embedding')
-    parser.add_argument('--word_embedding', default='/pub/data/yangdeq/CLIP/pretrained_weight/txt_encoding_4_artery_vein.pth', 
+    parser.add_argument('--word_embedding', default='/pub/data/yangdeq/CLIP/pretrained_weight/txt_encoding_parse.pth', 
                         help='The path of word embedding')
     # /home/yangdq/project/module/CLIP-Driven-Universal-Model/pretrained_weights/txt_encoding.pth
     ## hyperparameter
@@ -243,12 +243,12 @@ def main():
     parser.add_argument('--lr', default=8e-4, type=float, help='Learning rate') ## 1e-4 4e-10 used for continue training
     parser.add_argument('--weight_decay', default=1e-5, help='Weight Decay')
     ## dataset  all the preprocess ok
-    parser.add_argument('--dataset_list', nargs='+', default=["vein_semi"]) # 'PAOT', 'felix'
-    parser.add_argument('--train_txt', nargs='+', default='_full_train.txt')#_train_hessian_full.txt
-    parser.add_argument('--val_txt', nargs='+', default='_full_val.txt') #_val_hessian_full.txt
-    parser.add_argument('--test_txt', nargs='+', default='_full_test.txt') #_test_hessian_full.txt
+    parser.add_argument('--dataset_list', nargs='+', default=["parse"]) # 'PAOT', 'felix'
+    parser.add_argument('--train_txt', nargs='+', default='_train.txt')#_train_hessian_full.txt
+    parser.add_argument('--val_txt', nargs='+', default='_validation.txt') #_val_hessian_full.txt
+    parser.add_argument('--test_txt', nargs='+', default='_test.txt') #_test_hessian_full.txt
     parser.add_argument('--data_root_path', default='/pub/data/yangdeq/CLIP/data/vein/', help='data root path')
-    parser.add_argument('--data_txt_path', default='/home/yangdq/project/module/CLIP-Driven-Universal-Model/dataset/vein_semi_full_list/', help='data txt path')
+    parser.add_argument('--data_txt_path', default='/home/yangdq/project/module/CLIP_Driven_UM_github/dataset/parse_data_list/', help='data txt path')
     ##############################################
     parser.add_argument('--batch_size', default=4, help='batch size')
     parser.add_argument('--num_workers', default=16, type=int, help='workers numebr for DataLoader')

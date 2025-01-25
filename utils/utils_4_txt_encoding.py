@@ -32,11 +32,12 @@ from monai.utils import (
 from monai.data import decollate_batch
 from monai.transforms import Invertd, SaveImaged
 
-NUM_CLASS = 4 ## 34
+NUM_CLASS = 1 ## 34
 
 TEMPLATE_vein={
    
-    '25' : [1,2,3,4]
+    '25' : [1,2,3,4],
+    '26' : [1]
 }
 
 
@@ -61,7 +62,8 @@ TEMPLATE={
     '10_09': [1],
     '10_10': [31],
     '15': [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17], ## total segmentation,
-    '25' : [33,34,35,36]
+    '25' : [33,34,35,36],
+    '26' : [37]
 }
 
 ORGAN_NAME = ['Spleen', 'Right Kidney', 'Left Kidney', 'Gall Bladder', 'Esophagus', 
@@ -541,6 +543,22 @@ def organ_region_filter_out(tumor_mask, organ_mask):
 
     return tumor_mask
 
+def threshold_organ_parse_txt_encoder(data, organ=None, threshold=None):
+    ### threshold the sigmoid value to hard label
+    ## data: sigmoid value
+    ## threshold_list: a list of organ threshold
+    B = data.shape[0]
+    threshold_list = []
+    if organ:
+        THRESHOLD_DIC[organ] = threshold
+    for key, value in THRESHOLD_DIC.items():
+        threshold_list.append(value)
+    threshold_list = torch.tensor(threshold_list).repeat(B, 1).reshape(B,len(threshold_list),1,1,1).cuda()
+    # if threshold_list.shape[1] > 30:
+    #     pred_hard = data > threshold_list
+    # else:
+    pred_hard = data > threshold_list[:,-1:,:,:,:] ## 改
+    return pred_hard
 
 def PSVein_post_process(PSVein_mask, pancreas_mask):
     xy_sum_pancreas = pancreas_mask.sum(axis=0).sum(axis=0)
