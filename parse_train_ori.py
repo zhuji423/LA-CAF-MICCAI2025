@@ -19,14 +19,14 @@ from tensorboardX import SummaryWriter
 from monai.losses import DiceCELoss
 from monai.inferers import sliding_window_inference
 
-from model.Universal_model_4adapter_txt_image import Universal_model_adapter
+from model.Universal_model import Universal_model
 from dataset.dataloader import get_loader
-from utils import loss_2_txt_encoding as loss
-from utils.utils_4_txt_encoding import dice_score, check_data, TEMPLATE_vein, get_key, NUM_CLASS,ORGAN_NAME
+from utils import loss
+from utils.utils import dice_score, check_data, TEMPLATE, get_key, NUM_CLASS,ORGAN_NAME,TEMPLATE_vein
 from optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 torch.multiprocessing.set_sharing_strategy('file_system')
 from monai.utils import set_determinism
-from validation_4_txt_encoding import validation
+from validation import validation
 # set_determinism(seed=1307)
 
 def train(args, train_loader, model, optimizer, loss_seg_DICE, loss_seg_CE):
@@ -39,16 +39,19 @@ def train(args, train_loader, model, optimizer, loss_seg_DICE, loss_seg_CE):
     for step, batch in enumerate(epoch_iterator):
         x, y, name = batch["image"].to(args.device), batch["post_label"].float().to(args.device), batch['name']
         logit_map = model(x)
+
+        # term_seg_Dice = loss_seg_DICE.forward(logit_map, y[:,-2:,:,:,:], name, TEMPLATE)
+        # term_seg_BCE = loss_seg_CE.forward(logit_map, y[:,-2:,:,:,:], name, TEMPLATE)
         term_seg_Dice = loss_seg_DICE.forward(logit_map, y[:,:,:,:,:], name, TEMPLATE_vein)
         term_seg_BCE = loss_seg_CE.forward(logit_map, y[:,:,:,:,:], name, TEMPLATE_vein)
         loss = term_seg_BCE + term_seg_Dice
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
-        epoch_iterator.set_description(
-            "Epoch=%d: Training (%d / %d Steps) (dice_loss=%2.5f, bce_loss=%2.5f)" % (
-                args.epoch, step, len(train_loader), term_seg_Dice.item(), term_seg_BCE.item())
-        )
+        # epoch_iterator.set_description(
+        #     "Epoch=%d: Training (%d / %d Steps) (dice_loss=%2.5f, bce_loss=%2.5f)" % (
+        #         args.epoch, step, len(train_loader), term_seg_Dice.item(), term_seg_BCE.item())
+        # )
         # logging.info("Epoch=%d: Training (%d / %d Steps) (dice_loss=%2.5f, bce_loss=%2.5f)" % (args.epoch, step, len(train_loader), term_seg_Dice.item(), term_seg_BCE.item()))
         loss_bce_ave += term_seg_BCE.item()
         loss_dice_ave += term_seg_Dice.item()
@@ -75,8 +78,7 @@ def process(args,snapshot_path):
     torch.cuda.set_device(args.device)
 
     # prepare the 3D model
-    model = Universal_model_adapter(img_size=(args.roi_x, args.roi_y, args.roi_z),
-    # model = Universal_model(img_size=(args.roi_x, args.roi_y, args.roi_z),
+    model = Universal_model(img_size=(args.roi_x, args.roi_y, args.roi_z),
                     in_channels=1,
                     out_channels=NUM_CLASS,
                     backbone=args.backbone,
@@ -98,31 +100,22 @@ def process(args,snapshot_path):
             store_dict[name] = value
             num_count += 1
         ## 新加的两个类别 使用线性投射层
-        # transposed = store_dict['organ_embedding'].transpose(0, 1)
-        # linear = nn.Linear(32, 2).to(args.device)
-        # organ_embedding = linear(transposed.float())  # shape is now [512, 2]
-        # store_dict['organ_embedding'] = organ_embedding.transpose(0, 1)  # shape is now [2, 512]
-
         zeros_tensor = torch.zeros([1, 512]).to(args.device)
+        # store_dict['organ_embedding'] = torch.cat([store_dict['organ_embedding'], zeros_tensor], dim=0)
         store_dict['organ_embedding'] = zeros_tensor
         model.load_state_dict(store_dict)
         print('Use pretrained weights. load', num_count, 'params into', len(store_dict.keys()))
 
 
     if args.trans_encoding == 'word_embedding':
-
-        ## using pretrained weight to transform word_embedding
-        # word_embedding = torch.load(args.word_embedding)
-        # transposed = word_embedding.transpose(0, 1)
-        # linear = nn.Linear(32, 2).to(args.device)
-        # organ_embedding = linear(transposed.float())  # shape is now [512, 2]
-        # model.organ_embedding.data = organ_embedding.transpose(0, 1)  # shape is now [2, 512]
-
-        ### using new clip word embedding    
         word_embedding = torch.load(args.word_embedding)
+        # transposed = word_embedding.transpose(0, 1)
+        # linear = nn.Linear(34, 2).to(args.device)
+        # organ_embedding = linear(transposed.float())  # shape is now [512, 2]
+        # Transpose the tensor back
+        # model.organ_embedding.data = organ_embedding.transpose(0, 1)  # shape is now [2, 512]
         model.organ_embedding.data = word_embedding.float()
         print('load word embedding')
-        # print("cause pretrained model has been loaded, so no need to load word embedding")
 
     model.to(args.device)
     model.train()
@@ -178,18 +171,13 @@ def process(args,snapshot_path):
             writer.add_scalar('train_bce_loss', loss_bce, args.epoch)
             writer.add_scalar('lr', scheduler.get_lr(), args.epoch)
         ##################validation and test start ################
-        if (args.epoch% args.store_num == 0 and args.epoch != 0) and rank == 0:
-        # if (args.epoch > args.max_epoch*0.1 and  args.epoch% args.store_num == 0 and args.epoch != 0) and rank == 0:
-
+        if (args.epoch % args.store_num == 0 and args.epoch != 0) and rank == 0:
             checkpoint = {
                 "net": model.state_dict(),
                 'optimizer':optimizer.state_dict(),
                 'scheduler': scheduler.state_dict(),
                 "epoch": args.epoch
             }
-            # torch.save(checkpoint, snapshot_path+ \
-            #             '/epoch_' + str(args.epoch) +'.pth')
-            # print('save model success')
             args.phase = 'validation'
             validation_loader, val_transforms = get_loader(args)
             val_model_mean_dice = validation(model, validation_loader, args, args.epoch,snapshot_path)
@@ -213,7 +201,7 @@ def process(args,snapshot_path):
 
 def main():
     # torch.multiprocessing.set_sharing_strategy('file_system')
-    os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+    os.environ['CUDA_VISIBLE_DEVICES'] = "2"
     # os.environ['MASTER_ADDR'] = 'localhost'
     # os.environ['MASTER_PORT'] = '24332'
     parser = argparse.ArgumentParser()
@@ -224,7 +212,7 @@ def main():
     parser.add_argument("--device")
     parser.add_argument("--epoch", default=1)
     ## logging
-    parser.add_argument('--log_name', default='model2025/0124/parse_adapter', help='The path resume from checkpoint')
+    parser.add_argument('--log_name', default='model2025/0124/parse_ori', help='The path resume from checkpoint')
     ## model load
     parser.add_argument('--backbone', default='unet', help='backbone [swinunetr or unet or dints or unetpp]')
     parser.add_argument('--resume', default=None,\
