@@ -651,6 +651,9 @@ def threshold_organ_4_txt_encoder(data, organ=None, threshold=None):
     return pred_hard
 
 
+
+
+
 def visualize_label(batch, save_dir, input_transform):
     ### function: save the prediction result into dir
     ## Input

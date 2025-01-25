@@ -123,11 +123,16 @@ class Universal_model_adapter(nn.Module):
         for i in range(b):
             # x_repeat = x_feat[i].unsqueeze(0).repeat(self.class_num,1,1,1,1).T  ## [256,4]
             x_repeat = x_feat[i].squeeze().unsqueeze(0).repeat(self.class_num,1)
-            attention = torch.mm(task_encoding.squeeze() , task_encoding.squeeze().T)## [4,4]
-            #####normalize attention
-            min_val = torch.min(attention)
-            max_val = torch.max(attention)
-            attention = (attention - min_val) / (max_val - min_val)
+            if self.class_num != 1:
+                attention = torch.mm(task_encoding.squeeze() , task_encoding.squeeze().T)## [4,4]
+                #####normalize attention
+                min_val = torch.min(attention)
+                max_val = torch.max(attention)
+                attention = (attention - min_val) / (max_val - min_val)
+            else:
+                task_encoding_2d = task_encoding.squeeze().view(1,256)  # reshape to [256, 1]
+                attention = torch.mm(task_encoding_2d, task_encoding_2d.T)  # results in [256, 256]
+            
             # print(f"attention max min {attention.max()} {attention.min()}")
             #######normalize attention
             x_attention_feat = torch.matmul(attention,x_repeat).unsqueeze(2).unsqueeze(3).unsqueeze(4)

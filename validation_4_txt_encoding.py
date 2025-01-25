@@ -14,7 +14,7 @@ from monai.inferers import sliding_window_inference
 # from model.Universal_model_4adapter import Universal_model,Universal_model_2_txt_encoder
 from dataset.dataloader import get_loader
 from utils import loss
-from utils.utils_4_txt_encoding import dice_score, TEMPLATE,TEMPLATE_vein, ORGAN_NAME_VEIN,save_results_4_veins , get_key, NUM_CLASS
+from utils.utils_4_txt_encoding import dice_score, TEMPLATE,TEMPLATE_vein, ORGAN_NAME_VEIN,save_results_4_veins , get_key, NUM_CLASS,threshold_organ_parse_txt_encoder
 from utils.utils import extract_topk_largest_candidates, organ_post_process, threshold_organ,threshold_organ_4_txt_encoder
 from tools import cut_pred_for_dice
 from medpy.metric.binary import __surface_distances
@@ -60,7 +60,7 @@ def validation(model, ValLoader, args, idx,snapshot_path):
     model.eval()
     dice_list = {}
     nsd_list = {}
-    for key in TEMPLATE.keys():
+    for key in TEMPLATE_vein.keys():
         dice_list[key] = np.zeros((2, NUM_CLASS)) # 1st row for dice, 2nd row for count
         nsd_list[key] = np.zeros((2, NUM_CLASS)) # 1st row for dice, 2nd row for count
     save_dice_log = defaultdict(list)
@@ -75,6 +75,8 @@ def validation(model, ValLoader, args, idx,snapshot_path):
             pred_hard = threshold_organ_4_txt_encoder(pred_sigmoid)
         elif pred_sigmoid.shape[1] == 34:
             pred_hard = threshold_organ(pred_sigmoid)
+        elif pred_sigmoid.shape[1] == 1:
+            pred_hard = threshold_organ_parse_txt_encoder(pred_sigmoid)
         pred_hard = pred_hard.cpu()
         torch.cuda.empty_cache()
         B = pred_sigmoid.shape[0]
@@ -89,12 +91,15 @@ def validation(model, ValLoader, args, idx,snapshot_path):
                 pred_hard = threshold_organ(pred_sigmoid)
                 pred_hard_post = organ_post_process(pred_hard.cpu().numpy(), organ_list, args.log_name+'/'+name[0].split('/')[0]+'/'+name[0].split('/')[-1],args)
                 pred_hard_post = torch.tensor(pred_hard_post)
+            elif pred_sigmoid.shape[1] == 1 :
+                organ_list = TEMPLATE_vein[template_key]
+                pred_hard_post = pred_sigmoid
             batch['results'] = pred_hard_post
 
 
             for organ in organ_list:
-                if torch.sum(label[b,32 + organ-1,:,:,:]) != 0:
-                    dice_organ, recall, precision = dice_score(pred_hard_post[b,organ-1,:,:,:].cuda(), label[b,32+organ-1,:,:,:].cuda())
+                if torch.sum(label[b,36 + organ-1,:,:,:]) != 0:
+                    dice_organ, recall, precision = dice_score(pred_hard_post[b,organ-1,:,:,:].cuda(), label[b,36+organ-1,:,:,:].cuda())
                     dice_list[template_key][0][organ-1] += dice_organ.item()
                     dice_list[template_key][1][ organ-1] += 1
                     content += ' %s: %.4f, '%(ORGAN_NAME_VEIN[ organ-1], dice_organ.item())
@@ -108,7 +113,7 @@ def validation(model, ValLoader, args, idx,snapshot_path):
 
     with open(snapshot_path + f'/validation_test.json', 'a+') as f:
         for key in TEMPLATE_vein.keys():
-            if key == "25":
+            if key == "26":
                 organ_list = TEMPLATE_vein[key]
                 content = 'Task%s| '%(key)
                 # content1 = 'NSD Task%s| '%(key)
@@ -128,7 +133,7 @@ def validation(model, ValLoader, args, idx,snapshot_path):
                 f.write('\n')
         content = 'Average | '
         # for i in range(NUM_CLASS): ### original
-        for i in range(4): ### only write artery and vein
+        for i in range(1): ### only write artery and vein
             content += '%s: %.4f, '%(ORGAN_NAME_VEIN[i], ave_organ_dice[0][i] / ave_organ_dice[1][i])
         print(content)
         f.write(content)
