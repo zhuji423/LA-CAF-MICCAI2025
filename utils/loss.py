@@ -60,7 +60,7 @@ class DiceLoss(nn.Module):
                 template_key = name[b][0:2]
             organ_list = TEMPLATE[template_key]
             for organ in organ_list:
-                dice_loss = self.dice(predict[b, organ-1], target[b,  organ-1]) ## 改
+                dice_loss = self.dice(predict[b, organ-1], target[b,  36+organ-1]) ## 改
                 total_loss.append(dice_loss)
             
         total_loss = torch.stack(total_loss)
@@ -96,7 +96,7 @@ class Multi_BCELoss(nn.Module):
                 template_key = name[b][0:2]
             organ_list = TEMPLATE[template_key]
             for organ in organ_list:
-                ce_loss = self.criterion(predict[b, organ-1], target[b, organ-1])
+                ce_loss = self.criterion(predict[b, organ-1], target[b, 36+organ-1])
                 total_loss.append(ce_loss)
         total_loss = torch.stack(total_loss)
 

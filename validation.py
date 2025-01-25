@@ -14,7 +14,7 @@ from monai.inferers import sliding_window_inference
 from model.Universal_model import Universal_model,Universal_model_2_txt_encoder
 from dataset.dataloader import get_loader
 from utils import loss
-from utils.utils import dice_score, TEMPLATE,TEMPLATE_vein, ORGAN_NAME, merge_label, visualize_label, get_key, NUM_CLASS
+from utils.utils import dice_score, TEMPLATE,TEMPLATE_vein, ORGAN_NAME,ORGAN_NAME_VEIN, merge_label, visualize_label, get_key, NUM_CLASS
 from utils.utils import extract_topk_largest_candidates, organ_post_process, threshold_organ,threshold_organ_2_txt_encoder
 from tools import cut_pred_for_dice
 from medpy.metric.binary import __surface_distances
@@ -75,6 +75,8 @@ def validation(model, ValLoader, args, idx,snapshot_path):
             pred_hard = threshold_organ_2_txt_encoder(pred_sigmoid)
         elif pred_sigmoid.shape[1] == 34:
             pred_hard = threshold_organ(pred_sigmoid)
+        elif pred_sigmoid.shape[1] == 1:
+            pred_hard = threshold_organ(pred_sigmoid)
         pred_hard = pred_hard.cpu()
         torch.cuda.empty_cache()
         B = pred_sigmoid.shape[0]
@@ -89,15 +91,17 @@ def validation(model, ValLoader, args, idx,snapshot_path):
                 pred_hard = threshold_organ(pred_sigmoid)
                 pred_hard_post = organ_post_process(pred_hard.cpu().numpy(), organ_list, args.log_name+'/'+name[0].split('/')[0]+'/'+name[0].split('/')[-1],args)
                 pred_hard_post = torch.tensor(pred_hard_post)
-
+            elif pred_sigmoid.shape[1] == 1:
+                organ_list = TEMPLATE_vein[template_key]
+                pred_hard_post = pred_sigmoid
             for organ in organ_list:
-                if torch.sum(label[b,organ-1,:,:,:]) != 0:
-                    dice_organ, recall, precision = dice_score(pred_hard_post[b,organ-1,:,:,:].cuda(), label[b,organ-1,:,:,:].cuda())
+                if torch.sum(label[b,36+organ-1,:,:,:]) != 0:
+                    dice_organ, recall, precision = dice_score(pred_hard_post[b,organ-1,:,:,:].cuda(), label[b,36+organ-1,:,:,:].cuda())
                     dice_list[template_key][0][organ-1] += dice_organ.item()
                     dice_list[template_key][1][organ-1] += 1
-                    content += '%s: %.4f, '%(ORGAN_NAME[organ-1], dice_organ.item())
-                    save_dice_log[content] = '%s: dice %.4f, recall %.4f, precision %.4f'%(ORGAN_NAME[organ-1], dice_organ.item(), recall.item(), precision.item())
-                    print('%s: dice %.4f, recall %.4f, precision %.4f'%(ORGAN_NAME[organ-1], dice_organ.item(), recall.item(), precision.item()))
+                    content += '%s: %.4f, '%(ORGAN_NAME_VEIN[organ-1], dice_organ.item())
+                    save_dice_log[content] = '%s: dice %.4f, recall %.4f, precision %.4f'%(ORGAN_NAME_VEIN[organ-1], dice_organ.item(), recall.item(), precision.item())
+                    print('%s: dice %.4f, recall %.4f, precision %.4f'%(ORGAN_NAME_VEIN[organ-1], dice_organ.item(), recall.item(), precision.item()))
             print(content)
 
         torch.cuda.empty_cache()
@@ -105,14 +109,14 @@ def validation(model, ValLoader, args, idx,snapshot_path):
     ave_organ_dice = np.zeros((2, NUM_CLASS))
 
     with open(snapshot_path + f'/validation_test.json', 'a+') as f:
-        for key in TEMPLATE.keys():
-            if key == "25":
-                organ_list = TEMPLATE[key]
+        for key in TEMPLATE_vein.keys():
+            if key == "26":
+                organ_list = TEMPLATE_vein[key]
                 content = 'Task%s| '%(key)
                 # content1 = 'NSD Task%s| '%(key)
                 for organ in organ_list:
                     dice = dice_list[key][0][organ-1] / dice_list[key][1][organ-1] ##当前这个器官的平均dice，除以这个器官出现的次数
-                    content += '%s: %.4f, '%(ORGAN_NAME[organ-1], dice)
+                    content += '%s: %.4f, '%(ORGAN_NAME_VEIN[organ-1], dice)
                     ave_organ_dice[0][organ-1] += dice_list[key][0][organ-1]
                     ave_organ_dice[1][organ-1] += dice_list[key][1][organ-1]
 
@@ -126,8 +130,8 @@ def validation(model, ValLoader, args, idx,snapshot_path):
                 f.write('\n')
         content = 'Average | '
         # for i in range(NUM_CLASS): ### original
-        for i in range(32,34): ### only write artery and vein
-            content += '%s: %.4f, '%(ORGAN_NAME[i], ave_organ_dice[0][i] / ave_organ_dice[1][i])
+        for i in range(1): ### only write artery and vein
+            content += '%s: %.4f, '%(ORGAN_NAME_VEIN[i], ave_organ_dice[0][i] / ave_organ_dice[1][i])
         print(content)
         f.write(content)
         f.write('\n')

@@ -32,11 +32,12 @@ from monai.utils import (
 from monai.data import decollate_batch
 from monai.transforms import Invertd, SaveImaged
 
-NUM_CLASS = 34 ## 34
+NUM_CLASS = 1 ## 34
 
 TEMPLATE_vein={
    
-    '25' : [1,2]
+    '25' : [1,2],
+    '26' : [1]
 }
 
 
@@ -61,7 +62,8 @@ TEMPLATE={
     '10_09': [1],
     '10_10': [31],
     '15': [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17], ## total segmentation,
-    '25' : [33,34]
+    '25' : [33,34],
+    '26' : [37] 
 }
 
 ORGAN_NAME = ['Spleen', 'Right Kidney', 'Left Kidney', 'Gall Bladder', 'Esophagus', 
@@ -612,8 +614,8 @@ def threshold_organ(data, organ=None, threshold=None):
     # if threshold_list.shape[1] > 30:
     #     pred_hard = data > threshold_list
     # else:
-    # pred_hard = data > threshold_list[:,-2:,:,:,:] ## 改
-    pred_hard = data > threshold_list ## 改
+    pred_hard = data > threshold_list[:,-1:,:,:,:] ## 改
+    # pred_hard = data > threshold_list ## 改
     return pred_hard
 
 def threshold_organ_2_txt_encoder(data, organ=None, threshold=None):
