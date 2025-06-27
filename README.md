@@ -1,13 +1,4 @@
-# News
- - 🔥 The pseudo-label with manual refienment could be found in [AbdonmenAtlas 1.0](https://github.com/MrGiovanni/AbdomenAtlas)
- - 🔥 We collect recent medical universal models in [AWESOME MEDICAL UNIVERSAL MODEL](documents/awesome.md) [![Awesome](https://awesome.re/badge.svg)](https://awesome.re).
- - 😎 We have document for [common questions for code](documents/common_code_questions.md) and [common questions for paper](documents/common_paper_questions.md).
-
-# CLIP-Driven Universal Model
-
-<img src="teaser_fig.png" width = "480" height = "345" alt="" align=center />
-
-## Paper
+## MICCAI 2025 Self-adaptive Vision-Language Model for 3D Segmentation of Pulmonary Artery and Vein
 This repository provides the official implementation of Universal Model.
 
 <b>CLIP-Driven Universal Model for Organ Segmentation and Tumor Detection</b> <br/>
